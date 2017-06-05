@@ -61,9 +61,9 @@ method.log = function() {
 /*
  * 
  */
-method.check = function() {
+method.check = function(candle) {
 
-  var price = this.lastPrice;
+  var price = candle.close;
 
     this.age++;
     var cci = this.indicators.cci;
@@ -82,7 +82,6 @@ method.check = function() {
             this.trend.adviced = false;
             if (this.persisted == 0) {
                 this.trend.adviced = true;
-                console.log(2);
                 this.advice('short');
             }
         } else if (cci.result >= this.uplevel) {

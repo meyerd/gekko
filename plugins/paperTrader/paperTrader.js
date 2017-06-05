@@ -1,14 +1,14 @@
-var _ = require('lodash');
-var moment = require('moment');
+const _ = require('lodash');
+const moment = require('moment');
 
-var util = require('../../core/util.js');
-var dirs = util.dirs();
-var ENV = util.gekkoEnv();
+const util = require('../../core/util');
+const stats = require('../../core/stats');
+const dirs = util.dirs();
+const ENV = util.gekkoEnv();
 
-var config = util.getConfig();
-var calcConfig = config.paperTrader;
-var watchConfig = config.watch;
-
+const config = util.getConfig();
+const calcConfig = config.paperTrader;
+const watchConfig = config.watch;
 
 // Load the proper module that handles the results
 var Handler;
@@ -17,7 +17,7 @@ if(ENV === 'child-process')
 else
   Handler = require('./logger');
 
-var PaperTrader = function() {
+const PaperTrader = function() {
   _.bindAll(this);
 
   this.dates = {
@@ -44,6 +44,14 @@ var PaperTrader = function() {
   }
   this.current = _.clone(this.start);
   this.trades = 0;
+
+  this.sharpe = 0;
+
+  this.roundTrips = [];
+  this.roundTrip = {
+    entry: false,
+    exit: false
+  }
 }
 
 PaperTrader.prototype.extractFee = function(amount) {
@@ -75,14 +83,63 @@ PaperTrader.prototype.updatePosition = function(advice) {
     this.current.asset += this.extractFee(this.current.currency / price);
     this.current.currency = 0;
     this.trades++;
+
+    if(!calcConfig.reportRoundtrips)
+      return;
+
+    // register entry for roundtrip
+    this.roundTrip.entry = {
+      date: advice.candle.start,
+      price: price,
+      total: this.current.asset * price,
+    }
   }
 
   // virtually trade all {currency} to {asset} at the current price
-  if(what === 'short') {
+  else if(what === 'short') {
     this.current.currency += this.extractFee(this.current.asset * price);
     this.current.asset = 0;
     this.trades++;
+
+    const firstTrade = this.trades === 1;
+    if(firstTrade || !calcConfig.reportRoundtrips) 
+      return;
+
+    // we just did a roundtrip
+    this.roundTrip.exit = {
+      date: advice.candle.start,
+      price: price,
+      total: this.current.currency
+    }
+    this.handleRoundtrip();
   }
+}
+
+PaperTrader.prototype.handleRoundtrip = function() {
+  const roundtrip = {
+    entryAt: this.roundTrip.entry.date,
+    entryPrice: this.roundTrip.entry.price,
+    entryBalance: this.roundTrip.entry.total,
+
+    exitAt: this.roundTrip.exit.date,
+    exitPrice: this.roundTrip.exit.price,
+    exitBalance: this.roundTrip.exit.total,
+
+    duration: this.roundTrip.exit.date.diff(this.roundTrip.entry.date)
+  }
+
+  roundtrip.pnl = roundtrip.exitBalance - roundtrip.entryBalance;
+  roundtrip.profit = (100 * roundtrip.exitBalance / roundtrip.entryBalance) - 100;
+
+  this.roundTrips.push(roundtrip);
+  this.handler.handleRoundtrip(roundtrip);
+
+  // every time we have a new roundtrip
+  // update the cached sharpe ratio
+  this.sharpe = stats.sharpe(
+    this.roundTrips.map(r => r.profit),
+    calcConfig.riskFreeReturn
+  );
 }
 
 PaperTrader.prototype.processAdvice = function(advice) {
@@ -155,7 +212,6 @@ PaperTrader.prototype.calculateReportStatistics = function() {
     timespan: timespan.humanize(),
     market: this.endPrice * 100 / this.startPrice - 100,
 
-
     balance: balance,
     profit: profit,
     relativeProfit: relativeProfit,
@@ -166,7 +222,8 @@ PaperTrader.prototype.calculateReportStatistics = function() {
     startPrice: this.startPrice,
     endPrice: this.endPrice,
     trades: this.trades,
-    startBalance: this.start.balance
+    startBalance: this.start.balance,
+    sharpe: this.sharpe
   }
 
   report.alpha = report.profit - report.market;

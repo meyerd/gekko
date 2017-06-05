@@ -10,12 +10,15 @@
         .grd-row
           .grd-row-col-2-6 To:
           .grd-row-col-4-6 {{ fmt(to) }}
-        .grd-row
+        .grd-row(v-if='initialized')
           .grd-row-col-2-6 Imported data until:
           .grd-row-col-4-6 {{ fmt(latest) }}
-        .grd-row
+        .grd-row(v-if='initialized')
           .grd-row-col-2-6 To go:
           .grd-row-col-4-6 {{ fromEnd }}
+      spinner(v-if='!initialized')
+      .contain(v-if='initialized')
+        progressBar(:progress='progress')
       p 
         em (you don't have to wait until the import is done,
           | you can already start 
@@ -35,7 +38,15 @@
 
 <script>
 
+import _ from 'lodash';
+import progressBar from '../../global/progressBar.vue'
+import spinner from '../../global/blockSpinner.vue'
+
 export default {
+  components: {
+    progressBar,
+    spinner
+  },
   computed: {
     data: function() {
       return _.find(
@@ -43,16 +54,23 @@ export default {
         { id: this.$route.params.id }
       );
     },
+    initialized: function() {
+      if(this.data && this.latest.isValid())
+        return true
+    },
     latest: function() {
       if(this.data)
         return this.mom(this.data.latest);
+    },
+    fromEndMs: function() {
+      if(this.data)
+        return this.to.diff(this.latest);
     },
     fromEnd: function() {
       if(!this.latest)
         return 'LOADING'
 
-      let diff = this.to.diff(this.latest);
-      return humanizeDuration(diff);
+      return humanizeDuration(this.fromEndMs);
     },
     from: function() {
       if(this.data)
@@ -61,6 +79,17 @@ export default {
     to: function() {
       if(this.data)
         return this.mom(this.data.to)
+    },
+    timespan: function() {
+      if(this.data)
+        return this.to.diff(this.from)
+    },
+    progress: function() {
+      if(!this.data)
+        return;
+
+      const current = this.timespan - this.fromEndMs;
+      return 100 * current / this.timespan;
     }
   },
   methods: {

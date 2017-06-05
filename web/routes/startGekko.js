@@ -33,7 +33,7 @@ module.exports = function *() {
 
   console.log('Gekko', id, 'started');
 
-  pipelineRunner(mode, config, (err, event) => {
+  const child = pipelineRunner(mode, config, (err, event) => {
 
     if(err) {
       if(errored)
@@ -68,6 +68,19 @@ module.exports = function *() {
         gekko_type: type,
         emitter: 'gekko',
         trade
+      }
+      broadcast(wsEvent);
+      return;
+    } else if(event.type === 'roundtrip') {
+      let roundtrip = event.roundtrip;
+      gekkoManager.push(id, 'roundtrips', roundtrip);
+      let wsEvent = {
+        type: 'roundtrip',
+        gekko_id: id,
+        gekko_mode: mode,
+        gekko_type: type,
+        emitter: 'gekko',
+        roundtrip
       }
       broadcast(wsEvent);
       return;
@@ -117,6 +130,7 @@ module.exports = function *() {
     };
 
     gekko.trades = [];
+    gekko.roundtrips = [];
   }
 
   gekkoManager.add(gekko);

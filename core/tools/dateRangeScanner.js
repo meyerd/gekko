@@ -22,10 +22,10 @@ var scan = function(done) {
   reader.tableExists('candles', (err, exists) => {
 
     if(err)
-      return done(err);
+      return done(err, null, reader);
 
     if(!exists)
-      return done(null, []);
+      return done(null, [], reader);
 
     async.parallel({
       boundry: reader.getBoundry,
@@ -46,7 +46,7 @@ var scan = function(done) {
         return done(false, [{
           from: first,
           to: last
-        }]);
+        }], reader);
       }
 
       // figure out where the gaps are..
@@ -126,9 +126,7 @@ var scan = function(done) {
             // it contains all valid dataranges available for the
             // end user.
 
-            reader.close();
-
-            return done(false, ranges);
+            return done(false, ranges, reader);
           }
         )
     });

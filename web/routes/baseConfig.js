@@ -1,3 +1,5 @@
+var UIconfig = require('../vue/UIconfig');
+
 var config = {};
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -17,13 +19,21 @@ config.tradingAdvisor = {
     version: '1.0.2'
   }
 }
+config.candleWriter = {
+  enabled: false
+}
+
+config.adviceWriter = {
+  enabled: false,
+  muteSoft: true,
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //                       CONFIGURING ADAPTER
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-// forced for now, other adapters are outdated since 0.4
-config.adapter = 'sqlite';
+// configurable in the UIconfig
+config.adapter = UIconfig.adapter;
 
 config.sqlite = {
   path: 'plugins/sqlite',
@@ -42,6 +52,7 @@ config.postgresql = {
   path: 'plugins/postgresql',
   version: 0.1,
   connectionString: 'postgres://user:pass@localhost:5432', // if default port
+  database: null, // if set, we'll put all tables into a single database.
   dependencies: [{
     module: 'pg',
     version: '6.1.0'
