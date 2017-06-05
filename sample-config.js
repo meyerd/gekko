@@ -167,6 +167,17 @@ config.custom = {
   my_custom_setting: 10,
 }
 
+// 20percent strategy
+config.20percent = {
+  short: 10,
+  long: 21,
+  thresholds: {
+    down: -0.025,
+    up: 0.025,
+    duration: 10
+  }
+}
+
 config['talib-macd'] = {
   parameters: {
     optInFastPeriod: 10,
@@ -195,7 +206,7 @@ config.paperTrader = {
     currency: 100,
   },
   // how much fee in % does each trade cost?
-  fee: 0.25,
+  fee: 0.26,
   // how much slippage/spread should Gekko assume per trade?
   slippage: 0.05
 }
