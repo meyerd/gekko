@@ -28,7 +28,9 @@ Edit the uiconfig file like so:
             host: 'x.x.x.x', // Set this to the IP of the machine that will run Gekko
             port: 3000,
             path: '/'
-        }
+        },
+        adapter: 'sqlite'
+
     }
 
 You can now access the Gekko UI by going to `http://x.x.x.x:3000` in a browser (change `x.x.x.x` with the IP of the machine that will run Gekko).
@@ -52,7 +54,8 @@ The following assumes you configured a reverse proxy, if you did not simply foll
             host: 'gekko.example.com',
             port: 443,
             path: '/' // change this if you are serving from something like `example.com/gekko`
-        }
+        },
+        adapter: 'sqlite'
     }
 
 
@@ -108,7 +111,7 @@ Once NGINX is installed you will need to modify the configuration file. For Debi
 
 ## Obtaining a SSL certificate
 
-Your OS may or may not ship with openssl preinstalled. In the case it doesn't, simply install openssl using your package manager of choice. eg: sudo apt-get openssl
+Your OS may or may not ship with openssl preinstalled. In the case it doesn't, simply install openssl using your package manager of choice. eg: `sudo apt-get install openssl`.
 
 Below you can choose between creating a self signed certificate useful if you do not have a fqdn (fully qualified domain name), or if you by chance do have a fqdn you can use certbot to obtain a Let's Encrypt CA signed certificate.
 
@@ -123,7 +126,7 @@ Below you can choose between creating a self signed certificate useful if you do
 
 Install certbot, a client to obtain signed ssl certificates for your domain.
 
-    sudo apt-get certbot
+    sudo apt-get install certbot
 
 Run the following command:
 
