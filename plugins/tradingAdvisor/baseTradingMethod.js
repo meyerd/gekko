@@ -75,14 +75,15 @@ var Indicators = {
 var allowedIndicators = _.keys(Indicators);
 var allowedTalibIndicators = _.keys(talib);
 
-var Base = function() {
+var Base = function(settings) {
   _.bindAll(this);
 
   // properties
   this.age = 0;
   this.processedTicks = 0;
   this.setup = false;
-
+  this.settings = settings;
+  this.tradingAdvisor = config.tradingAdvisor;
   // defaults
   this.requiredHistory = 0;
   this.priceValue = 'close';
@@ -112,6 +113,9 @@ var Base = function() {
 
   if(!this.update)
     this.update = function() {};
+
+  if(!this.end)
+    this.end = function() {};
 
   // let's run the implemented starting point
   this.init();
@@ -324,11 +328,15 @@ Base.prototype.advice = function(newPosition, _candle) {
 // to be sure we only stop after all candles are
 // processed.
 Base.prototype.finish = function(done) {
-  if(!this.asyncTick)
+  if(!this.asyncTick) {
+    this.end();
     return done();
+  }
 
-  if(this.age === this.processedTicks)
+  if(this.age === this.processedTicks) {
+    this.end();
     return done();
+  }
 
   // we are not done, register cb
   // and call after we are..

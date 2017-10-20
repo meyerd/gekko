@@ -17,7 +17,7 @@ var Trader = function(config) {
   this.asset = config.asset;
   this.currency = config.currency;
   this.pair = this.asset + this.currency;
-  this.bitfinex = new Bitfinex(this.key, this.secret).rest;
+  this.bitfinex = new Bitfinex(this.key, this.secret, { version: 1 }).rest;
 }
 
 // if the exchange errors we try the same call again after
@@ -45,7 +45,7 @@ Trader.prototype.retry = function(method, args) {
 
 Trader.prototype.getPortfolio = function(callback) {
   var args = _.toArray(arguments);
-  this.bitfinex.wallet_balances(function (err, data, body) {
+  this.bitfinex.wallet_balances((err, data, body) => {
 
     if(err && err.message === '401') {
       let e = 'Bitfinex replied with an unauthorized error. ';
@@ -84,13 +84,13 @@ Trader.prototype.getPortfolio = function(callback) {
     ];
 
     callback(err, portfolio);
-  }.bind(this));
+  });
 }
 
 Trader.prototype.getTicker = function(callback) {
   var args = _.toArray(arguments);
   // the function that will handle the API callback
-  var process = function(err, data, body) {
+  var process = (err, data, body) => {
     if (err)
         return this.retry(this.getTicker(args));
 
@@ -98,7 +98,7 @@ Trader.prototype.getTicker = function(callback) {
     // data, the callback is still the same since
     // we are inside the same javascript scope.
     callback(err, {bid: +data.bid, ask: +data.ask})
-  }.bind(this);
+  };
   this.bitfinex.ticker(this.pair, process);
 }
 
@@ -120,7 +120,7 @@ Trader.prototype.submit_order = function(type, amount, price, callback) {
     this.name.toLowerCase(),
     type,
     'exchange limit',
-    function (err, data, body) {
+    (err, data, body) => {
       if (err) {
         log.error('unable to ' + type, err, body);
         return this.retry(this.submit_order, args);
@@ -152,7 +152,7 @@ Trader.prototype.checkOrder = function(order_id, callback) {
 
 Trader.prototype.getOrder = function(order, callback) {
   var args = _.toArray(arguments);
-  var get = function(err, data) {
+  var get = (err, data) => {
     if(err || !data)
       return this.retry(this.getOrder, arguments);
 
@@ -161,7 +161,7 @@ Trader.prototype.getOrder = function(order, callback) {
     var date = moment.unix(data.timestamp);
 
     callback(undefined, {price, amount, date});
-  }.bind(this);
+  };
 
   this.bitfinex.order_status(order, get);
 }
@@ -169,7 +169,7 @@ Trader.prototype.getOrder = function(order, callback) {
 
 Trader.prototype.cancelOrder = function(order_id, callback) {
   var args = _.toArray(arguments);
-  this.bitfinex.cancel_order(order_id, function (err, data, body) {
+  this.bitfinex.cancel_order(order_id, (err, data, body) => {
       if (err || !data) {
         // bitfinex way of telling it was already cancelled..
         if(err.message === 'Order could not be cancelled.')
@@ -180,31 +180,31 @@ Trader.prototype.cancelOrder = function(order_id, callback) {
       }
 
       return callback();
-  }.bind(this));
+  });
 }
 
 Trader.prototype.getTrades = function(since, callback, descending) {
   var args = _.toArray(arguments);
 
-  var path = this.pair;
-  if(since)
-    path += '?limit_trades=2000';
+  var path = this.pair; 
+  if(since) 
+    path += '?limit_trades=2000'; 
 
-  this.bitfinex.trades(path, function(err, data) {
+  this.bitfinex.trades(path, (err, data) => {
     if (err)
       return this.retry(this.getTrades, args);
 
     var trades = _.map(data, function(trade) {
       return {
-        tid: trade.tid,
-        date:  trade.timestamp,
-        price: +trade.price,
+        tid: trade.tid, 
+        date:  trade.timestamp, 
+        price: +trade.price, 
         amount: +trade.amount
       }
     });
 
     callback(null, descending ? trades : trades.reverse());
-  }.bind(this));
+  });
 }
 
 Trader.getCapabilities = function () {
@@ -212,7 +212,7 @@ Trader.getCapabilities = function () {
     name: 'Bitfinex',
     slug: 'bitfinex',
     currencies: ['USD', 'BTC', 'ETH'],
-    assets: ['BTC', 'LTC', 'ETH', 'SAN', 'IOT', 'BCH', 'OMG', 'XMR', 'DSH', 'ZEC', 'EOS', 'ETC', 'XRP'],
+    assets: ['BTC', 'LTC', 'ETH', 'SAN', 'IOT', 'BCH', 'OMG', 'XMR', 'DSH', 'ZEC', 'EOS', 'ETC', 'XRP', 'NEO', 'ETP'],
     markets: [
       
         //Tradeable Pairs to USD
@@ -229,7 +229,9 @@ Trader.getCapabilities = function () {
         { pair: ['USD', 'XMR'], minimalOrder: { amount: 0.01, unit: 'asset' } },
         { pair: ['USD', 'ETC'], minimalOrder: { amount: 0.01, unit: 'asset' } },
         { pair: ['USD', 'XRP'], minimalOrder: { amount: 0.01, unit: 'asset' } },
-
+        { pair: ['USD', 'NEO'], minimalOrder: { amount: 0.01, unit: 'asset' } },
+        { pair: ['USD', 'ETP'], minimalOrder: { amount: 0.01, unit: 'asset' } },
+      
         //Tradeable Pairs to BTC
         { pair: ['BTC', 'ETH'], minimalOrder: { amount: 0.01, unit: 'asset' } },
         { pair: ['BTC', 'BCH'], minimalOrder: { amount: 0.01, unit: 'asset' } },
@@ -243,17 +245,22 @@ Trader.getCapabilities = function () {
         { pair: ['BTC', 'EOS'], minimalOrder: { amount: 0.01, unit: 'asset' } },
         { pair: ['BTC', 'ETC'], minimalOrder: { amount: 0.01, unit: 'asset' } },
         { pair: ['BTC', 'XRP'], minimalOrder: { amount: 0.01, unit: 'asset' } },
-
+        { pair: ['BTC', 'NEO'], minimalOrder: { amount: 0.01, unit: 'asset' } },
+        { pair: ['BTC', 'ETP'], minimalOrder: { amount: 0.01, unit: 'asset' } },
+      
         //Tradeable Pairs to ETH
         { pair: ['ETH', 'BCH'], minimalOrder: { amount: 0.01, unit: 'asset' } },
         { pair: ['ETH', 'IOT'], minimalOrder: { amount: 0.01, unit: 'asset' } },
         { pair: ['ETH', 'OMG'], minimalOrder: { amount: 0.01, unit: 'asset' } },
         { pair: ['ETH', 'SAN'], minimalOrder: { amount: 0.01, unit: 'asset' } },
         { pair: ['ETH', 'EOS'], minimalOrder: { amount: 0.01, unit: 'asset' } },
-
+        { pair: ['ETH', 'NEO'], minimalOrder: { amount: 0.01, unit: 'asset' } },
+        { pair: ['ETH', 'ETP'], minimalOrder: { amount: 0.01, unit: 'asset' } },
+      
     ],
     requires: ['key', 'secret'],
     tid: 'tid',
+    providesFullHistory: true,
     tradable: true
   };
 }

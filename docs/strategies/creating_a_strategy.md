@@ -35,6 +35,15 @@ A strategy is a combination of functions that get market data in the form of can
       // your code!
     }
 
+    // Optional for executing code
+    // after completion of a backtest.
+    // This block will not execute in
+    // live use as a live gekko is
+    // never ending.
+    strat.end = function() {
+      // your code!
+    }
+
     module.exports = strat;
 
 In the boilerplate we define four functions you have to write yourself. The functions are executed like so:
@@ -187,12 +196,10 @@ You can create configurable parameters for your method which allows you to adjus
 
 And in your method you can use them again (for example to pass to an indicator):
 
-    // in the init:
-    var config = require('../core/util.js').getConfig();
-    this.settings = config.custom;
-
     // anywhere in your code:
     this.settings.my_custom_setting; // is now 10
+
+___The name of your configuration must be the same as the name of the strategy___
 
 ### Tool libraries
 
