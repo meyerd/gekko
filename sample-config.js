@@ -9,6 +9,12 @@ var config = {};
 
 config.debug = true; // for additional logging / debugging
 
+config.ui = {
+   ssl: true
+}
+
+config.headless = true;
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //                         WATCHING A MARKET
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -173,7 +179,18 @@ config.custom = {
 }
 
 // 20percent strategy
-config.20percent = {
+config.percent20 = {
+  short: 10,
+  long: 21,
+  thresholds: {
+    down: -0.025,
+    up: 0.025,
+    duration: 10
+  }
+}
+
+// avgcrossing strategy
+config.avgcrossing = {
   short: 10,
   long: 21,
   thresholds: {
@@ -389,7 +406,7 @@ config.adviceWriter = {
 //                       CONFIGURING ADAPTER
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-config.adapter = 'sqlite';
+config.adapter = 'postgresql';
 
 config.sqlite = {
   path: 'plugins/sqlite',
@@ -404,8 +421,8 @@ config.sqlite = {
 config.postgresql = {
   path: 'plugins/postgresql',
   version: 0.1,
-  connectionString: 'postgres://user:pass@localhost:5432', // if default port
-  database: null, // if set, we'll put all tables into a single database.
+  connectionString: 'postgres://gekko:mee0ou6W@localhost:5432', // if default port
+  database: 'gekko', // if set, we'll put all tables into a single database.
   schema: 'public',
   dependencies: [{
     module: 'pg',

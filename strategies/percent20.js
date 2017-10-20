@@ -114,6 +114,7 @@ method.check = function() {
   //   this.advice();
   // }
   // this.trend.duration++;
+  
 }
 
 module.exports = method;
