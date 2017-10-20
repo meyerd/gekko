@@ -1,10 +1,12 @@
 debug = true
 
 # what database should Gekko use?
-adapter = 'sqlite'
+adapter = 'postgresql'
 
 [watch]
-exchange = 'Poloniex'
-currency = 'USDT'
+#exchange = 'Poloniex'
+excahnge = 'GDAX'
+#currency = 'USDT'
+currency = 'EUR'
 asset = 'BTC'
 
